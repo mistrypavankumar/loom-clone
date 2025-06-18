@@ -1,0 +1,6 @@
+{
+  "databaseURL": "https://Mistry-Pavan-Kumar-s-workspace-13m22v.us-east-1.xata.sh/db/snapcast-db",
+  "codegen": {
+    "output": "src/xata.ts"
+  }
+}
