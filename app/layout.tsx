@@ -1,18 +1,18 @@
-import type { Metadata } from "next";
-import { Karla } from "next/font/google";
-import "./globals.css";
-import { satoshi } from "@/fonts/font";
+import type { Metadata } from 'next';
+import { Karla } from 'next/font/google';
+import './globals.css';
+import { satoshi } from '@/fonts/font';
 
 const geistKarla = Karla({
-  variable: "--font-geist-karla",
-  subsets: ["latin"],
+  variable: '--font-geist-karla',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "SnapCast",
-  description: "A Screen Sharing App",
+  title: 'SnapCast',
+  description: 'A Screen Sharing App',
   icons: {
-    icon: "/assets/icons/logo.svg",
+    icon: '/assets/icons/logo.svg',
   },
 };
 

@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { useState, useRef } from "react";
+import { useRef, useState } from 'react';
 
 export default function ScreenRecording() {
   const [recording, setRecording] = useState<boolean>(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
   const startRecording = async () => {
     try {
-      setError("");
+      setError('');
 
       // Request screen capture
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -40,7 +40,7 @@ export default function ScreenRecording() {
 
       // Set up media recorder
       mediaRecorderRef.current = new MediaRecorder(combinedStream, {
-        mimeType: "video/webm",
+        mimeType: 'video/webm',
       });
 
       mediaRecorderRef.current.ondataavailable = (e: BlobEvent) => {
@@ -50,7 +50,7 @@ export default function ScreenRecording() {
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         setVideoUrl(url);
         chunksRef.current = [];
@@ -60,14 +60,14 @@ export default function ScreenRecording() {
       setRecording(true);
     } catch (err) {
       setError(
-        `Error: ${err instanceof Error ? err.message : "Unknown error"}`
+        `Error: ${err instanceof Error ? err.message : 'Unknown error'}`
       );
       console.error(err);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current?.state !== "inactive") {
+    if (mediaRecorderRef.current?.state !== 'inactive') {
       mediaRecorderRef.current?.stop();
     }
     stream?.getTracks().forEach((track) => track.stop());
@@ -77,7 +77,7 @@ export default function ScreenRecording() {
   const downloadRecording = () => {
     if (!videoUrl) return;
 
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = videoUrl;
     a.download = `recording-${new Date().toISOString()}.webm`;
     document.body.appendChild(a);

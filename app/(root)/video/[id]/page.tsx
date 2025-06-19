@@ -1,10 +1,6 @@
-import React from 'react'
+import React from 'react';
 
 const Page = () => {
-    return (
-        <main className={"wrapper page"}>
-            Video Page
-        </main>
-    )
-}
-export default Page
+  return <main className={'wrapper page'}>Video Page</main>;
+};
+export default Page;
