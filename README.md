@@ -1,36 +1,215 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Snapcast – Video Sharing Platform with Auth, Xata, Drizzle, Bunny, and Arcjet
 
-## Getting Started
+A full-stack video sharing platform built with **Next.js**, **Better Auth**, **Xata**, **Drizzle ORM**, **Bunny CDN**, and **Arcjet**.
 
-First, run the development server:
+---
+
+## 🚀 Features
+
+- 🔐 Secure authentication with [Better Auth](https://www.better-auth.com/)
+- 🎥 Video upload and streaming via [Bunny CDN](https://bunny.net/)
+- 🧠 Smart database and search powered by [Xata.io](https://xata.io/)
+- 🛡️ Bot detection and security rules via [Arcjet](https://arcjet.com/)
+- 🗃️ Type-safe ORM with [Drizzle](https://orm.drizzle.team/)
+
+---
+
+## 🧩 Tech Stack
+
+- **Frontend:** Next.js, React, TailwindCSS
+- **Backend:** Next.js API Routes, Drizzle ORM, Xata.io
+- **Storage & Streaming:** Bunny CDN
+- **Authentication:** Better Auth with Google OAuth
+- **Security:** Arcjet Middleware
+
+---
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/mistrypavankumar/loom-clone.git
+cd snapcast
+npm install
+```
+
+---
+
+## ⚙️ Environment Setup
+
+Rename `.env.example` to `.env` and add your keys:
+
+```env
+# Public API URL
+NEXT_PUBLIC_API_URL=http://localhost:3000
+
+# Better Auth
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000
+
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Xata DB
+XATA_API_KEY=
+DATABASE_URL=
+DATABASE_URL_POSTGRES=
+
+# Bunny CDN
+BUNNY_STORAGE_ACCESS_KEY=
+BUNNY_STREAM_ACCESS_KEY=
+BUNNY_LIBRARY_ID=
+
+# Arcjet (Security middleware)
+ARCJET_API_KEY=
+```
+
+---
+
+## 🔐 Setting up Better Auth
+
+1. Go to [Better Auth Docs](https://www.better-auth.com/docs/installation#set-environment-variables)
+2. Add values for:
+   - `BETTER_AUTH_SECRET`
+   - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from [Google Console](https://console.developers.google.com)
+3. Make sure redirect URI is set to:
+   ```
+   http://localhost:3000/api/auth/callback/google
+   ```
+
+---
+
+## 🧠 Setting up Xata.io
+
+1. Sign up at [xata.io](https://xata.io/)
+2. Create a database.
+3. In your terminal:
+
+```bash
+npm install -g @xata.io/cli
+xata init
+# Select your database, choose TypeScript
+```
+
+This creates `xata.config.ts` and links your app to the database.
+
+---
+
+## 🗃️ Setting up Drizzle ORM
+
+Install dependencies:
+
+```bash
+npm install drizzle-orm
+npm install -D drizzle-kit
+npm install pg
+```
+
+```bash
+npm install dotenv
+```
+
+You’ll also need a `drizzle.config.ts` file to generate schema types from Postgres. So create this file in root folder and add below code. (Only if file not exists)
+
+```bash
+import {config} from "dotenv";
+import {defineConfig} from "drizzle-kit";
+
+config({
+    path: "./.env",
+})
+
+
+export default defineConfig({
+    schema: "./drizzle/schema.ts",
+    out: "./drizzle/migrations",
+    dialect: "postgresql",
+    dbCredentials: {
+        url: process.env.DATABASE_URL_POSTGRES!
+    }
+})
+
+```
+
+
+---
+
+## 🎬 Bunny CDN Setup
+
+1. Go to [bunny.net](https://bunny.net)
+2. Create:
+   - Storage Zone
+   - Video Library
+3. Set the following keys in `.env`:
+   - `BUNNY_STORAGE_ACCESS_KEY`
+   - `BUNNY_STREAM_ACCESS_KEY`
+   - `BUNNY_LIBRARY_ID`
+
+---
+
+## 🛡️ Arcjet Middleware Setup
+
+1. Sign up at [arcjet.com](https://arcjet.com)
+2. Copy your `ARCJET_API_KEY` to `.env`
+3. Arcjet provides:
+   - Bot detection
+   - Rate limiting
+   - Attack protection
+
+Middleware is configured using `createMiddleware(validate)` in `middleware.ts`.
+
+---
+
+## 🧪 Running the Project
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📁 Folder Structure
 
-## Learn More
+```
+loom-clone/
+├── .xata/                  # Xata-generated config & schema files
+├── app/                    # Next.js app directory (routes, layout)
+├── components/             # Reusable React components
+├── constants/              # Constant values (e.g., limits, enums)
+├── drizzle/                # Drizzle ORM schema and DB setup
+├── fonts/                  # Custom font files
+├── lib/                    # Utility functions and third-party wrappers (e.g., Arcjet, auth)
+├── node_modules/           # Installed dependencies
+├── pages/                  # Legacy pages (if using both /pages and /app)
+├── public/                 # Static files like images, icons
+├── .env                    # Environment variables
+├── .gitignore              # Git ignored files
+├── .prettierrc             # Prettier code formatting config
+├── drizzle.config.ts       # Drizzle ORM CLI config
+├── eslint.config.mjs       # ESLint rules
+├── middleware.ts           # Global middleware for auth and Arcjet protection
+├── next.config.ts          # Next.js config file
+├── package.json            # Project metadata and scripts
+├── postcss.config.mjs      # PostCSS config for TailwindCSS
+├── tsconfig.json           # TypeScript config
+├── xata.ts                 # Xata DB client (generated)
+└── README.md               # Project documentation (you’re reading it!)
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+xata init          # Setup Xata connection
+drizzle-kit push   # Push schema changes
+npm run dev        # Start local server
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📜 License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT © 2025 Pavan Kumar Mistry
