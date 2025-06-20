@@ -12,7 +12,7 @@ type VideoFormValues = {
   title: string;
   description: string;
   tags: string;
-  visibility: "public" | "private";
+  visibility: 'public' | 'private';
 };
 
 declare interface FormFieldProps {
@@ -24,7 +24,7 @@ declare interface FormFieldProps {
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => void;
   placeholder?: string;
-  as?: "input" | "textarea" | "select";
+  as?: 'input' | 'textarea' | 'select';
   options?: Array<{ value: string; label: string }>;
 }
 
@@ -37,7 +37,7 @@ declare interface FileInputProps {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onReset: () => void;
-  type: "video" | "image";
+  type: 'video' | 'image';
 }
 
 declare interface TranscriptEntry {
@@ -49,8 +49,9 @@ declare interface VideoFormValues {
   title: string;
   description: string;
   tags: string;
-  visibility: "public" | "private";
+  visibility: 'public' | 'private';
 }
+
 declare interface NavbarProps {
   user: User | undefined;
 }
@@ -96,6 +97,7 @@ declare interface VideoPlayerProps {
   videoId: string;
   className?: string;
 }
+
 declare interface VideoInfoProps {
   transcript?: string;
   title: string;
@@ -105,20 +107,19 @@ declare interface VideoInfoProps {
   videoUrl: string;
 }
 
-declare interface ImageWithFallbackProps extends Omit<ImageProps, "src"> {
+declare interface ImageWithFallbackProps extends Omit<ImageProps, 'src'> {
   fallback?: string;
   alt: string;
   src: string | null;
 }
 
-type Visibility = string;
+type Visibility = 'public' | 'private' | string;
 
 declare interface VideoDetails {
   videoId: string;
   title: string;
   description: string;
   thumbnailUrl: string;
-  tags: string | string[];
   visibility: Visibility;
   duration?: number | null;
 }
@@ -138,7 +139,7 @@ declare interface ApiFetchOptions {
   headers?: Record<string, string>;
   body?: object;
   expectJson?: boolean;
-  bunnyType: "stream" | "storage";
+  bunnyType: 'stream' | 'storage';
 }
 
 declare interface BunnyStreamApiOptions {

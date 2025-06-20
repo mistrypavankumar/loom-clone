@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import aj from '@/lib/arcjet';
 import { headers } from 'next/headers';
+import { detectBot, shield } from 'arcjet';
+import { createMiddleware } from '@arcjet/next';
 
-export async function middleware(request: NextRequest, response: NextResponse) {
+export async function middleware(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -13,6 +16,15 @@ export async function middleware(request: NextRequest, response: NextResponse) {
 
   return NextResponse.next();
 }
+
+const validate = aj.withRule(shield({ mode: 'LIVE' })).withRule(
+  detectBot({
+    mode: 'LIVE',
+    allow: ['CATEGORY:SEARCH_ENGINE', 'GOOGLE_CRAWLER'],
+  })
+);
+
+export default createMiddleware(validate);
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sign-in|assets).*)'],
