@@ -1,6 +1,7 @@
 # Snapcast – Video Sharing Platform with Auth, Xata, Drizzle, Bunny, and Arcjet
 
-A full-stack video sharing platform built with **Next.js**, **Better Auth**, **Xata**, **Drizzle ORM**, **Bunny CDN**, and **Arcjet**.
+A full-stack video sharing platform built with **Next.js**, **Better Auth**, **Xata**, **Drizzle ORM**, **Bunny CDN**,
+and **Arcjet**.
 
 ---
 
@@ -16,11 +17,51 @@ A full-stack video sharing platform built with **Next.js**, **Better Auth**, **X
 
 ## 🧩 Tech Stack
 
-- **Frontend:** Next.js, React, TailwindCSS
-- **Backend:** Next.js API Routes, Drizzle ORM, Xata.io
-- **Storage & Streaming:** Bunny CDN
-- **Authentication:** Better Auth with Google OAuth
-- **Security:** Arcjet Middleware
+### 🔐 [Arcjet](https://arcjet.com)
+
+Arcjet is a developer-first security platform that integrates **bot protection**, **rate limiting**, **email validation
+**, and **attack protection** into your application with minimal code.  
+It offers customizable protection for forms, login pages, and API routes, supporting frameworks like **Node.js**, *
+*Next.js**, **Deno**, **Bun**, **Remix**, **SvelteKit**, and **NestJS**.
+
+### 🎥 [Bunny.net](https://bunny.net)
+
+Bunny.net is a developer-friendly **video delivery platform** offering **global CDN**, **edge storage**, **adaptive
+streaming**, and a **customizable player**.  
+It simplifies video management with features like automatic encoding, token-based security, and real-time analytics —
+ideal for **seamless, secure, and scalable video streaming**.
+
+### 🛡️ [Better Auth](https://www.better-auth.com)
+
+Better Auth is a **TypeScript-first authentication** and authorization library that simplifies implementing **secure
+login**, **two-factor authentication**, and **social sign-ins**, all while supporting **multi-tenancy**.
+
+### 🧠 [Drizzle ORM](https://orm.drizzle.team)
+
+Drizzle ORM is a **type-safe, lightweight ORM** for SQL databases. It provides a modern solution for interacting with
+databases using TypeScript, supporting **migrations**, **queries**, and **schema management**.
+
+### ⚡ [Next.js](https://nextjs.org)
+
+Next.js is a powerful **React framework** that enables the development of **fast, scalable web applications** with
+features like **server-side rendering (SSR)**, **static site generation (SSG)**, and **API routes** for full-stack
+development.
+
+### 🎨 [Tailwind CSS](https://tailwindcss.com)
+
+Tailwind CSS is a **utility-first CSS framework** that allows developers to design custom user interfaces using
+low-level utility classes directly in HTML — greatly **streamlining the design process**.
+
+### 🧾 [TypeScript](https://www.typescriptlang.org)
+
+TypeScript is a **superset of JavaScript** that adds **static typing**, providing better **tooling**, **code quality**,
+and **error detection**, making it ideal for building **large-scale applications**.
+
+### 📊 [Xata](https://xata.io)
+
+Xata is a **serverless PostgreSQL platform** offering **auto-scaling**, **zero-downtime schema migrations**, **real-time
+branching**, and **built-in full-text search**.  
+It provides a spreadsheet-like UI for intuitive data management, enhancing **modern development workflows**.
 
 ---
 
@@ -70,8 +111,8 @@ ARCJET_API_KEY=
 
 1. Go to [Better Auth Docs](https://www.better-auth.com/docs/installation#set-environment-variables)
 2. Add values for:
-   - `BETTER_AUTH_SECRET`
-   - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from [Google Console](https://console.developers.google.com)
+    - `BETTER_AUTH_SECRET`
+    - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from [Google Console](https://console.developers.google.com)
 3. Make sure redirect URI is set to:
    ```
    http://localhost:3000/api/auth/callback/google
@@ -109,7 +150,8 @@ npm install pg
 npm install dotenv
 ```
 
-You’ll also need a `drizzle.config.ts` file to generate schema types from Postgres. So create this file in root folder and add below code. (Only if file not exists)
+You’ll also need a `drizzle.config.ts` file to generate schema types from Postgres. So create this file in root folder
+and add below code. (Only if file not exists)
 
 ```bash
 import {config} from "dotenv";
@@ -131,19 +173,18 @@ export default defineConfig({
 
 ```
 
-
 ---
 
 ## 🎬 Bunny CDN Setup
 
 1. Go to [bunny.net](https://bunny.net)
 2. Create:
-   - Storage Zone
-   - Video Library
+    - Storage Zone
+    - Video Library
 3. Set the following keys in `.env`:
-   - `BUNNY_STORAGE_ACCESS_KEY`
-   - `BUNNY_STREAM_ACCESS_KEY`
-   - `BUNNY_LIBRARY_ID`
+    - `BUNNY_STORAGE_ACCESS_KEY`
+    - `BUNNY_STREAM_ACCESS_KEY`
+    - `BUNNY_LIBRARY_ID`
 
 ---
 
@@ -152,9 +193,9 @@ export default defineConfig({
 1. Sign up at [arcjet.com](https://arcjet.com)
 2. Copy your `ARCJET_API_KEY` to `.env`
 3. Arcjet provides:
-   - Bot detection
-   - Rate limiting
-   - Attack protection
+    - Bot detection
+    - Rate limiting
+    - Attack protection
 
 Middleware is configured using `createMiddleware(validate)` in `middleware.ts`.
 
