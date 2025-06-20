@@ -212,4 +212,4 @@ npm run dev        # Start local server
 
 ## 📜 License
 
-MIT © 2025 Pavan Kumar Mistry
+MIT © 2025 [Pavan Kumar Mistry](https://github.com/mistrypavankumar)
