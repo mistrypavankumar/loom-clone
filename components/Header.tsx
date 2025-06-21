@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import DropdownList from '@/components/DropdownList';
-import RecordScreen from '@/components/RecordScreen';
+import RecordScreenWithCamera from '@/components/RecordScreenWithCamera';
 
 const Header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
   return (
@@ -34,7 +34,8 @@ const Header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
             />
             <span>Upload a video</span>
           </Link>
-          <RecordScreen />
+          {/*<RecordScreen />*/}
+          <RecordScreenWithCamera />
         </aside>
       </section>
       <section className="search-filter">
