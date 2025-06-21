@@ -31,7 +31,7 @@ const RecordScreenWithCamera = () => {
     recordingDuration,
     cameraStream,
   } = useScreenRecordingWithCamera();
-
+  
   useEffect(() => {
     if (
       (mode === 'camera' || mode === 'both') &&
@@ -53,7 +53,7 @@ const RecordScreenWithCamera = () => {
     let isDragging = false;
 
     const onMouseDown = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).dataset?.resize) return; // prevent drag on resize handle
+      if ((e.target as HTMLElement).dataset?.resize) return;
       isDragging = true;
       offsetX = e.clientX - el.getBoundingClientRect().left;
       offsetY = e.clientY - el.getBoundingClientRect().top;

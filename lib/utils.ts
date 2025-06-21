@@ -169,8 +169,9 @@ export const getMediaStreams = async (
 
 export const createAudioMixer = (
   audioContext: AudioContext,
-  stream1?: MediaStream | null,
-  stream2?: MediaStream | null,
+  stream1?: MediaStream | null, // screen stream
+  stream2?: MediaStream | null, // camera stream
+  stream3?: MediaStream | null, // mic stream (optional)
   requireAudio = true
 ) => {
   if (!audioContext || audioContext.state === 'closed') return null;
@@ -190,12 +191,14 @@ export const createAudioMixer = (
     }
   };
 
+  // Attach all provided streams
   attachStream(stream1);
   attachStream(stream2);
+  attachStream(stream3);
 
-  // Prevent MediaRecorder crash if no audio
+  // Prevent MediaRecorder crash if audio is required but none found
   if (requireAudio && destination.stream.getAudioTracks().length === 0) {
-    console.warn('No audio tracks available in either stream.');
+    console.warn('No audio tracks available in any stream.');
     return null;
   }
 

@@ -60,22 +60,33 @@ export const useScreenRecordingWithCamera = () => {
 
       let screenStream: MediaStream | null = null;
       let camStream: MediaStream | null = null;
+      let micStream: MediaStream | null = null;
 
+      // Step 1: Capture screen (video only, NOT audio)
       if (mode === 'screen' || mode === 'both') {
-        screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true,
-        });
-        screenStream
-          .getVideoTracks()
-          .forEach((track) => combinedStream.addTrack(track));
-        originalStreams.push(screenStream);
+        try {
+          screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: false, // prevent system audio-related blob issues
+          });
+          screenStream
+            .getVideoTracks()
+            .forEach((track) => combinedStream.addTrack(track));
+          originalStreams.push(screenStream);
+        } catch (err) {
+          console.error(
+            'User cancelled screen sharing or permission denied:',
+            err
+          );
+          return false;
+        }
       }
 
+      // Step 2: Capture camera if needed
       if (mode === 'camera' || mode === 'both') {
         camStream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: withMic,
+          audio: withMic, // only include mic with camera if requested
         });
         setCameraStream(camStream);
         camStream
@@ -84,18 +95,31 @@ export const useScreenRecordingWithCamera = () => {
         originalStreams.push(camStream);
       }
 
+      // Step 3: Capture mic separately (for screen-only mode)
+      if (mode === 'screen' && withMic) {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        originalStreams.push(micStream);
+      }
+
+      // Step 4: Mix audio (if any)
+      if (audioContextRef.current?.state !== 'closed') {
+        await audioContextRef.current?.close().catch(console.error);
+      }
+
       audioContextRef.current = new AudioContext();
       const audioDestination = createAudioMixer(
         audioContextRef.current,
         screenStream,
         camStream,
-        true
+        micStream,
+        false // do NOT require audio — allows silent videos to still work
       );
 
       audioDestination?.stream
         .getAudioTracks()
-        .forEach((track: MediaStreamTrack) => combinedStream.addTrack(track));
+        .forEach((track) => combinedStream.addTrack(track));
 
+      // Step 5: Setup MediaRecorder
       combinedStream._originalStreams = originalStreams;
       streamRef.current = combinedStream;
 
@@ -106,7 +130,7 @@ export const useScreenRecordingWithCamera = () => {
 
       chunksRef.current = [];
       startTimeRef.current = Date.now();
-      mediaRecorderRef.current.start(1000);
+      mediaRecorderRef.current.start(1000); // collect data every 1s
 
       setState((prev) => ({ ...prev, isRecording: true }));
       return true;
