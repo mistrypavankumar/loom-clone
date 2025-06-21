@@ -164,8 +164,8 @@ const Page = () => {
         duration: videoDuration,
       });
 
-      // step-6: Redirect to the video page
-      router.push(`/video/${videoId}`);
+      // step-6: Redirect to home page
+      router.push(`/`);
     } catch (error) {
       console.error('Error submitting form: ', error);
     } finally {
