@@ -73,11 +73,12 @@ export const useScreenRecordingWithCamera = () => {
             .getVideoTracks()
             .forEach((track) => combinedStream.addTrack(track));
           originalStreams.push(screenStream);
-        } catch (err) {
+        } catch (error) {
           console.error(
             'User cancelled screen sharing or permission denied:',
-            err
+            error
           );
+
           return false;
         }
       }

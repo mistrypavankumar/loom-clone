@@ -31,7 +31,7 @@ const RecordScreenWithCamera = () => {
     recordingDuration,
     cameraStream,
   } = useScreenRecordingWithCamera();
-  
+
   useEffect(() => {
     if (
       (mode === 'camera' || mode === 'both') &&
@@ -167,43 +167,54 @@ const RecordScreenWithCamera = () => {
   };
 
   return (
-    <div className="p-4">
-      <button
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        onClick={() => setIsOpen(true)}
-      >
+    <div className="record">
+      <button className="primary-btn" onClick={() => setIsOpen(true)}>
         <Image src={ICONS.record} alt="record" width={16} height={16} />
         <span>Record a video</span>
       </button>
 
       {isOpen && (
-        <section className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-xl p-6 relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Video Recording</h3>
+        <section className="dialog">
+          <div
+            className={'overlay-record'}
+            onClick={() => {
+              if (!isRecording && !recordedVideoUrl) {
+                closeModal();
+              }
+            }}
+          />
+          <div className="dialog-content">
+            <div className={'flex justify-between items-start mb-4'}>
+              <div>
+                <h3 className="text-lg font-semibold">Video Recording</h3>
+                {!isRecording && <p>Select mode and click record to begin.</p>}
+              </div>
+
               <button onClick={closeModal}>
                 <Image src={ICONS.close} alt="close" width={20} height={20} />
               </button>
             </div>
 
             {/* Recording Mode Selector */}
-            {!isRecording && !recordedVideoUrl && (
-              <div className="flex gap-3 mb-4">
-                {['screen', 'camera', 'both'].map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setMode(type as typeof mode)}
-                    className={`px-4 py-2 rounded-md border ${
-                      mode === type
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'
-                    }`}
-                  >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className={'w-fit mx-auto'}>
+              {!isRecording && !recordedVideoUrl && (
+                <aside className="flex gap-3 mb-4">
+                  {['screen', 'camera', 'both'].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setMode(type as typeof mode)}
+                      className={`${
+                        mode === type
+                          ? 'primary-btn border border-pink-100'
+                          : 'secondary-btn'
+                      }`}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </button>
+                  ))}
+                </aside>
+              )}
+            </div>
 
             {/* Status or Recorded Preview */}
             <section className="mb-4">
@@ -229,18 +240,16 @@ const RecordScreenWithCamera = () => {
                   className="w-full rounded-md border"
                 />
               ) : (
-                <p className="text-gray-600">
-                  Select mode and click record to begin.
-                </p>
+                <div />
               )}
             </section>
 
             {/* Actions */}
-            <div className="flex flex-wrap gap-3">
+            <div className="block flex-wrap gap-3 mx-auto w-fit">
               {!isRecording && !recordedVideoUrl && (
                 <button
                   onClick={handleStartRecording}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  className="px-7 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 flex items-center gap-2"
                 >
                   <Image
                     src={ICONS.record}
@@ -255,34 +264,34 @@ const RecordScreenWithCamera = () => {
               {isRecording && (
                 <button
                   onClick={stopRecording}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 flex items-center gap-2"
                 >
-                  <Image src={ICONS.record} alt="stop" width={16} height={16} />
+                  <Image
+                    className={'animate-ping'}
+                    src={ICONS.record}
+                    alt="stop"
+                    width={16}
+                    height={16}
+                  />
                   Stop Recording
                 </button>
               )}
 
               {recordedVideoUrl && (
-                <>
+                <div className={'flex items-center gap-3'}>
                   <button
                     onClick={recordAgain}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    className="px-4 py-2 bg-yellow-500 text-white rounded-full hover:bg-yellow-600"
                   >
                     Record Again
                   </button>
                   <button
                     onClick={goToUpload}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 flex items-center gap-2"
                   >
-                    <Image
-                      src={ICONS.upload}
-                      alt="upload"
-                      width={16}
-                      height={16}
-                    />
                     Continue to Upload
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>
