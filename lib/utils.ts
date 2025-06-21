@@ -102,14 +102,18 @@ export const withErrorHandling = <T, A extends unknown[]>(
 export const getOrderByClause = (filter?: string) => {
   switch (filter) {
     case 'Most Viewed':
-      return sql`${videos.views} DESC`;
+      return sql`${videos.views}
+      DESC`;
     case 'Least Viewed':
-      return sql`${videos.views} ASC`;
+      return sql`${videos.views}
+      ASC`;
     case 'Oldest First':
-      return sql`${videos.createdAt} ASC`;
+      return sql`${videos.createdAt}
+      ASC`;
     case 'Most Recent':
     default:
-      return sql`${videos.createdAt} DESC`;
+      return sql`${videos.createdAt}
+      DESC`;
   }
 };
 
@@ -301,10 +305,22 @@ export function daysAgo(inputDate: Date): string {
 }
 
 export const createIframeLink = (videoId: string) =>
-  `https://iframe.mediadelivery.net/embed/421422/${videoId}?autoplay=true&preload=true`;
+  `https://iframe.mediadelivery.net/embed/457412/${videoId}?autoplay=true&preload=true`;
 
 export const doesTitleMatch = (videos: any, searchQuery: string) =>
   ilike(
-    sql`REPLACE(REPLACE(REPLACE(LOWER(${videos.title}), '-', ''), '.', ''), ' ', '')`,
+    sql`REPLACE
+    (REPLACE(REPLACE(LOWER(
+    ${videos.title}
+    ),
+    '-',
+    ''
+    ),
+    '.',
+    ''
+    ),
+    ' ',
+    ''
+    )`,
     `%${searchQuery.replace(/[-. ]/g, '').toLowerCase()}%`
   );

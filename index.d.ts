@@ -83,6 +83,7 @@ declare interface VideoCardProps {
 }
 
 declare interface VideoDetailHeaderProps {
+  id: string;
   title: string;
   createdAt: Date;
   userImg: string | null | undefined;

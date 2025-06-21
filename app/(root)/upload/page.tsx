@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import FileInput from '@/components/FileInput';
 import FormField from '@/components/FormField';
 import { useFileInput } from '@/lib/hooks/useFileInput';
@@ -51,6 +51,52 @@ const Page = () => {
       setVideoDuration(video.duration);
     }
   }, [video.duration]);
+
+  // This effect runs once to check if there's a recorded video in sessionStorage and
+  // pre-populates the video input if found
+  useEffect(() => {
+    const checkForRecordedVideo = async () => {
+      try {
+        const stored = sessionStorage.getItem('recordedVideo');
+        if (!stored) return;
+
+        const { url, name, type, duration } = JSON.parse(stored);
+
+        const blob = await fetch(url).then((response) => response.blob());
+
+        const file = new File([blob], name, {
+          type,
+          lastModified: Date.now(),
+        });
+
+        if (video.inputRef.current) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+
+          video.inputRef.current.files = dataTransfer.files;
+
+          const event = new Event('change', { bubbles: true });
+          video.inputRef.current.dispatchEvent(event);
+
+          video.handleFileChange({
+            target: {
+              files: dataTransfer.files,
+            },
+          } as ChangeEvent<HTMLInputElement>);
+        }
+
+        if (duration) setVideoDuration(duration);
+
+        // remove the recorded video from sessionStorage
+        sessionStorage.removeItem('recordedVideo');
+        URL.revokeObjectURL(url);
+      } catch (errr) {
+        console.error('Error loading recorded video: ', errr);
+      }
+    };
+
+    checkForRecordedVideo();
+  }, [video]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
