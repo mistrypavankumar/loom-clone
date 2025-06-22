@@ -86,6 +86,17 @@ export const videos = pgTable('videos', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const videoViews = pgTable('video_views', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  videoId: uuid('video_id')
+    .notNull()
+    .references(() => videos.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  viewedAt: timestamp('viewed_at').defaultNow(),
+});
+
 export const schema = {
   user,
   session,

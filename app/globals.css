@@ -347,6 +347,10 @@
             @apply py-2.5 px-5 flex items-center gap-2.5 text-sm font-semibold text-white bg-pink-100 rounded-4xl;
         }
 
+        .secondary-btn {
+            @apply py-2.5 px-5 flex items-center gap-2.5 text-sm font-semibold text-gray-100/50 bg-white hover:text-white hover:bg-pink-100 border rounded-4xl duration-300;
+        }
+
         .dialog {
             @apply fixed inset-0 flex items-center justify-center z-50;
 

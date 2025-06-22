@@ -168,23 +168,39 @@ export const getMediaStreams = async (
 };
 
 export const createAudioMixer = (
-  ctx: AudioContext,
-  displayStream: MediaStream,
-  micStream: MediaStream | null,
-  hasDisplayAudio: boolean
+  audioContext: AudioContext,
+  stream1?: MediaStream | null, // screen stream
+  stream2?: MediaStream | null, // camera stream
+  stream3?: MediaStream | null, // mic stream (optional)
+  requireAudio = true
 ) => {
-  if (!hasDisplayAudio && !micStream) return null;
+  if (!audioContext || audioContext.state === 'closed') return null;
 
-  const destination = ctx.createMediaStreamDestination();
-  const mix = (stream: MediaStream, gainValue: number) => {
-    const source = ctx.createMediaStreamSource(stream);
-    const gain = ctx.createGain();
-    gain.gain.value = gainValue;
-    source.connect(gain).connect(destination);
+  const destination = audioContext.createMediaStreamDestination();
+
+  const attachStream = (stream?: MediaStream | null) => {
+    if (!stream) return;
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length > 0) {
+      try {
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(destination);
+      } catch (err) {
+        console.warn('AudioContext error for stream:', err);
+      }
+    }
   };
 
-  if (hasDisplayAudio) mix(displayStream, 0.7);
-  if (micStream) mix(micStream, 1.5);
+  // Attach all provided streams
+  attachStream(stream1);
+  attachStream(stream2);
+  attachStream(stream3);
+
+  // Prevent MediaRecorder crash if audio is required but none found
+  if (requireAudio && destination.stream.getAudioTracks().length === 0) {
+    console.warn('No audio tracks available in any stream.');
+    return null;
+  }
 
   return destination;
 };

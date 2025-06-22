@@ -80,6 +80,7 @@ declare interface VideoCardProps {
   views: number;
   visibility: Visibility;
   duration: number | null;
+  page?: 'home' | 'profile' | 'search';
 }
 
 declare interface VideoDetailHeaderProps {

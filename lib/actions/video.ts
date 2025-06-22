@@ -11,7 +11,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { BUNNY } from '@/constants';
 import { db } from '@/drizzle/db';
-import { user, videos } from '@/drizzle/schema';
+import { user, videos, videoViews } from '@/drizzle/schema';
 import { revalidatePath } from 'next/cache';
 import aj from '@/lib/arcjet';
 import { fixedWindow } from 'arcjet';
@@ -73,6 +73,23 @@ const buildVideoWithUserQuery = () => {
     })
     .from(videos)
     .leftJoin(user, eq(videos.userId, user.id));
+};
+
+const deleteVideoFromBunny = async (videoId: string) => {
+  const url = `${VIDEO_STREAM_BASE_URL}/${BUNNY_LIBRARY_ID}/videos/${videoId}`;
+
+  const response = await apiFetch(url, {
+    method: 'DELETE',
+    bunnyType: 'stream',
+    headers: {
+      Accept: 'application/json',
+      AccessKey: ACCESS_KEY.streamAccessKey,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete video from Bunny CDN');
+  }
 };
 
 // Server actions
@@ -240,3 +257,65 @@ export const getAllVideosByUser = withErrorHandling(
     return { user: userInfo, videos: userVideos, count: userVideos.length };
   }
 );
+
+export const increaseVideoViews = withErrorHandling(async (videoId: string) => {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user?.id) return;
+
+  const userId = session.user.id;
+
+  const [existingView] = await db
+    .select()
+    .from(videoViews)
+    .where(and(eq(videoViews.userId, userId), eq(videoViews.videoId, videoId)))
+    .limit(1);
+
+  if (!existingView) {
+    await db.insert(videoViews).values({
+      userId,
+      videoId,
+    });
+  }
+
+  await db
+    .update(videos)
+    .set({
+      views: sql`${videos.views}
+      + 1`,
+      updatedAt: new Date(),
+    })
+    .where(eq(videos.id, videoId));
+});
+
+export const deleteVideoByOwner = withErrorHandling(async (videoId: string) => {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user?.id) {
+    throw new Error('User not authenticated');
+  }
+
+  const userId = session.user.id;
+
+  // Find the video by Bunny's videoId (string), not internal UUID
+  const [videoRecord] = await db
+    .select()
+    .from(videos)
+    .where(eq(videos.videoId, videoId))
+    .limit(1);
+
+  if (!videoRecord) throw new Error('Video not found');
+  if (videoRecord.userId !== userId)
+    throw new Error('Not allowed to delete this video');
+
+  // 1. Delete from Bunny CDN
+  await deleteVideoFromBunny(videoId);
+
+  // 2. Delete view records linked by internal UUID
+  await db.delete(videoViews).where(eq(videoViews.videoId, videoRecord.id));
+
+  // 3. Delete video from database
+  await db.delete(videos).where(eq(videos.id, videoRecord.id));
+
+  return { success: true, message: 'Video deleted successfully' };
+});
