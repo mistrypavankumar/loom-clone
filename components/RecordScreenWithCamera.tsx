@@ -11,16 +11,9 @@ const RecordScreenWithCamera = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<'screen' | 'camera' | 'both'>('screen');
-  const [camOverlayPos, setCamOverlayPos] = useState({ x: 20, y: 20 });
-  const [camOverlaySize, setCamOverlaySize] = useState({
-    width: 200,
-    height: 150,
-  });
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraPreviewRef = useRef<HTMLVideoElement>(null);
-  const dragRef = useRef<HTMLDivElement>(null);
-  const resizeRef = useRef<HTMLDivElement>(null);
 
   const {
     isRecording,
@@ -53,110 +46,6 @@ const RecordScreenWithCamera = () => {
     }
   }, [cameraStream, mode]);
 
-  // Handle dragging the overlay
-  useEffect(() => {
-    const el = dragRef.current;
-    if (!el) return;
-
-    let offsetX = 0;
-    let offsetY = 0;
-    let isDragging = false;
-
-    const onMouseDown = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).dataset?.resize) return;
-      isDragging = true;
-      offsetX = e.clientX - el.getBoundingClientRect().left;
-      offsetY = e.clientY - el.getBoundingClientRect().top;
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      const newX = window.innerWidth - e.clientX - (el.offsetWidth - offsetX);
-      const newY = window.innerHeight - e.clientY - (el.offsetHeight - offsetY);
-      setCamOverlayPos({ x: Math.max(0, newX), y: Math.max(0, newY) });
-    };
-
-    const onMouseUp = () => {
-      isDragging = false;
-    };
-
-    el.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-
-    return () => {
-      el.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-  }, []);
-
-  // Handle resizing the overlay
-  useEffect(() => {
-    const handle = resizeRef.current;
-    if (!handle) return;
-
-    let startX = 0;
-    let startY = 0;
-    let startWidth = 0;
-    let startHeight = 0;
-    let resizing = false;
-
-    const onMouseDown = (e: MouseEvent) => {
-      resizing = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      startWidth = camOverlaySize.width;
-      startHeight = camOverlaySize.height;
-      e.preventDefault();
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!resizing) return;
-      const newWidth = Math.min(
-        Math.max(150, startWidth + (e.clientX - startX)),
-        400
-      );
-      const newHeight = Math.min(
-        Math.max(100, startHeight + (e.clientY - startY)),
-        300
-      );
-      setCamOverlaySize({ width: newWidth, height: newHeight });
-    };
-
-    const onMouseUp = () => {
-      resizing = false;
-    };
-
-    handle.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-
-    return () => {
-      handle.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-  }, [camOverlaySize]);
-
-  const closeModal = () => {
-    resetRecording();
-    setIsOpen(false);
-    setErrorMessage('');
-  };
-
-  const handleStartRecording = async () => {
-    await startRecording(mode);
-  };
-
-  const recordAgain = async () => {
-    resetRecording();
-    await startRecording(mode);
-    if (recordedVideoUrl && videoRef.current) {
-      videoRef.current.src = recordedVideoUrl;
-    }
-  };
-
   const goToUpload = () => {
     if (!recordedBlob) return;
 
@@ -175,6 +64,74 @@ const RecordScreenWithCamera = () => {
 
     router.push('/upload');
     closeModal();
+  };
+
+  const cameraPopupOpenedRef = useRef(false);
+
+  const handleStartRecording = async () => {
+    if (mode === 'both' && cameraPreviewRef.current) {
+      // Ensure video is playing before PiP
+      cameraPreviewRef.current
+        .play()
+        .then(() => {
+          return cameraPreviewRef.current!.requestPictureInPicture();
+        })
+        .then(() => {
+          console.log('✅ Entered Picture-in-Picture');
+        })
+        .catch((err) => {
+          toast.error('Failed to enter Picture-in-Picture');
+          console.error(err);
+        });
+    }
+
+    await startRecording(mode);
+  };
+
+  const closeModal = () => {
+    if (document.pictureInPictureElement) {
+      document.exitPictureInPicture().catch((err) => {
+        console.warn('Error exiting PiP:', err);
+      });
+    }
+
+    resetRecording();
+    setIsOpen(false);
+    setErrorMessage('');
+    cameraPopupOpenedRef.current = false;
+  };
+
+  const recordAgain = async () => {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture().catch((err) => {
+        console.warn('Error exiting PiP before re-record:', err);
+      });
+    }
+
+    resetRecording();
+    cameraPopupOpenedRef.current = false;
+
+    await startRecording(mode);
+
+    if (mode === 'both' && cameraPreviewRef.current) {
+      cameraPreviewRef.current
+        .play()
+        .then(() => {
+          cameraPreviewRef.current!.requestPictureInPicture();
+        })
+        .then(() => {
+          console.log('✅ Re-entered Picture-in-Picture');
+          cameraPopupOpenedRef.current = true;
+        })
+        .catch((err) => {
+          toast.error('Failed to re-enter Picture-in-Picture');
+          console.error(err);
+        });
+    }
+
+    if (recordedVideoUrl && videoRef.current) {
+      videoRef.current.src = recordedVideoUrl;
+    }
   };
 
   return (
@@ -228,7 +185,9 @@ const RecordScreenWithCamera = () => {
             </div>
 
             {/* Status or Recorded Preview */}
-            <section className="mb-4">
+            <section
+              className={`mb-4 overflow-hidden ${isRecording ? (mode === 'camera' ? 'border-2 border-gray-500' : '') : recordedVideoUrl ? 'border-2 border-gray-500' : ''}`}
+            >
               {isRecording ? (
                 mode === 'camera' ? (
                   <video
@@ -236,7 +195,7 @@ const RecordScreenWithCamera = () => {
                     autoPlay
                     muted
                     playsInline
-                    className="w-full rounded-md border object-cover"
+                    className={'w-full'}
                   />
                 ) : (
                   <article className="text-red-600 font-semibold">
@@ -248,7 +207,7 @@ const RecordScreenWithCamera = () => {
                   ref={videoRef}
                   src={recordedVideoUrl}
                   controls
-                  className="w-full rounded-md border"
+                  className={'w-full'}
                 />
               ) : (
                 <div />
@@ -310,42 +269,14 @@ const RecordScreenWithCamera = () => {
       )}
 
       {/* ✅ Floating Camera Preview with Resize */}
-      {isOpen && mode === 'both' && cameraStream && (
-        <div
-          ref={dragRef}
-          style={{
-            position: 'fixed',
-            bottom: `${camOverlayPos.y}px`,
-            right: `${camOverlayPos.x}px`,
-            zIndex: 1000,
-            width: `${camOverlaySize.width}px`,
-            height: `${camOverlaySize.height}px`,
-            cursor: 'move',
-          }}
-          className="rounded shadow-lg overflow-hidden border border-gray-300 bg-black relative"
-        >
-          <video
-            ref={cameraPreviewRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-
-          {/* Resize Handle */}
-          <div
-            ref={resizeRef}
-            data-resize
-            className="absolute bottom-0 right-0 w-4 h-4 bg-white cursor-se-resize"
-            style={{
-              borderTop: '2px solid gray',
-              borderLeft: '2px solid gray',
-              transform: 'rotate(45deg)',
-              margin: '4px',
-            }}
-            title="Resize"
-          />
-        </div>
+      {isOpen && mode === 'both' && (
+        <video
+          ref={cameraPreviewRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-full h-full object-cover hidden"
+        />
       )}
     </div>
   );
