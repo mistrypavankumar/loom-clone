@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { daysAgo } from '@/lib/utils';
 import VideoDeleteButton from '@/components/VideoDeleteButton';
+import { authClient } from '@/lib/auth-client';
 
 const VideoDetailHeader = ({
   id,
@@ -13,8 +14,11 @@ const VideoDetailHeader = ({
   userImg,
   username,
   ownerId,
+  bunnyVideoId,
 }: VideoDetailHeaderProps) => {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const currentUser = session?.user;
 
   const [copied, setCopied] = useState(false);
 
@@ -64,7 +68,13 @@ const VideoDetailHeader = ({
             height={24}
           />
         </button>
-        <VideoDeleteButton videoId={id} userId={ownerId} />
+        {ownerId === currentUser?.id && (
+          <VideoDeleteButton
+            videoId={id}
+            bunnyVideoId={bunnyVideoId}
+            userId={ownerId}
+          />
+        )}
       </aside>
     </header>
   );

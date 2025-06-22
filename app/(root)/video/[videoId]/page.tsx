@@ -2,8 +2,8 @@ import React from 'react';
 import { getVideoById } from '@/lib/actions/video';
 import { redirect } from 'next/navigation';
 import VideoPlayer from '@/components/VideoPlayer';
-import VideoDetailHeader from '@/components/VideoDetailHeader';
 import IncreaseViewCountClient from '@/components/IncreaseViewCountClient';
+import VideoDetailHeader from '@/components/VideoDetailHeader';
 
 const Page = async ({ params }: Params) => {
   const { videoId } = await params;
@@ -14,7 +14,7 @@ const Page = async ({ params }: Params) => {
 
   return (
     <main className={'wrapper page'}>
-      <IncreaseViewCountClient videoId={videoId} />
+      <IncreaseViewCountClient videoId={video.id} />
 
       <VideoDetailHeader
         {...video}
@@ -24,7 +24,7 @@ const Page = async ({ params }: Params) => {
       />
       <section className={'video-details'}>
         <div className={'content'}>
-          <VideoPlayer videoId={video.videoId} />
+          <VideoPlayer bunnyVideoId={video.bunnyVideoId} />
         </div>
       </section>
     </main>

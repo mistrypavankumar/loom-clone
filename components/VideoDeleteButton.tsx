@@ -4,13 +4,12 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ICONS } from '@/constants';
 
-const VideoDeleteButton = ({
-  videoId,
-  userId,
-}: {
+interface VideoDeleteButtonProps {
   videoId: string;
   userId: string;
-}) => {
+}
+
+const VideoDeleteButton = ({ videoId, userId }: VideoDeleteButtonProps) => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -24,27 +23,25 @@ const VideoDeleteButton = ({
   };
 
   const handleDelete = async () => {
-    if (confirmationText.toLowerCase() !== 'delete') {
+    if (confirmationText.trim().toLowerCase() !== 'delete') {
       setError('Please type "delete" to confirm.');
       return;
     }
 
     setIsDeleting(true);
-    
+
     try {
       const { success, message } = await deleteVideoByOwner(videoId);
 
       if (success) {
-        setIsModalOpen(false);
+        closeModal();
         router.push(`/profile/${userId}`);
       } else {
         setError(message || 'Failed to delete video');
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError('Failed to delete video');
-        console.error('Error deleting video:', err);
-      }
+      console.error('Error deleting video:', err);
+      setError('Something went wrong. Please try again.');
     } finally {
       setIsDeleting(false);
     }

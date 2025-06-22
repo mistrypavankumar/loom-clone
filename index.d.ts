@@ -89,14 +89,14 @@ declare interface VideoDetailHeaderProps {
   createdAt: Date;
   userImg: string | null | undefined;
   username?: string;
-  videoId: string;
+  bunnyVideoId: string;
   ownerId: string;
   visibility: string;
   thumbnailUrl: string;
 }
 
 declare interface VideoPlayerProps {
-  videoId: string;
+  bunnyVideoId: string;
   className?: string;
 }
 
@@ -118,7 +118,7 @@ declare interface ImageWithFallbackProps extends Omit<ImageProps, 'src'> {
 type Visibility = 'public' | 'private' | string;
 
 declare interface VideoDetails {
-  videoId: string;
+  bunnyVideoId: string;
   title: string;
   description: string;
   thumbnailUrl: string;

@@ -7,10 +7,18 @@ const IncreaseViewCountClient = ({ videoId }: { videoId: string }) => {
   const hasIncremented = useRef(false);
 
   useEffect(() => {
-    if (!hasIncremented.current && videoId) {
-      increaseVideoViews(videoId).catch(console.error);
-      hasIncremented.current = true;
-    }
+    const increaseViews = async () => {
+      try {
+        if (!hasIncremented.current && videoId) {
+          await increaseVideoViews(videoId);
+          hasIncremented.current = true;
+        }
+      } catch (error) {
+        console.error('Error increasing video views:', error);
+      }
+    };
+
+    increaseViews();
   }, [videoId]);
 
   return null;
