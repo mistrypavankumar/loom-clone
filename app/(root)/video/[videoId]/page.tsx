@@ -3,6 +3,7 @@ import { getVideoById } from '@/lib/actions/video';
 import { redirect } from 'next/navigation';
 import VideoPlayer from '@/components/VideoPlayer';
 import VideoDetailHeader from '@/components/VideoDetailHeader';
+import IncreaseViewCountClient from '@/components/IncreaseViewCountClient';
 
 const Page = async ({ params }: Params) => {
   const { videoId } = await params;
@@ -13,6 +14,8 @@ const Page = async ({ params }: Params) => {
 
   return (
     <main className={'wrapper page'}>
+      <IncreaseViewCountClient videoId={videoId} />
+
       <VideoDetailHeader
         {...video}
         userImg={user?.image}

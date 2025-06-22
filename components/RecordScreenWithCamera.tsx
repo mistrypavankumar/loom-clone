@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ICONS } from '@/constants';
 import { useRouter } from 'next/navigation';
 import { useScreenRecordingWithCamera } from '@/lib/hooks/useScreenRecordingWithCamera';
+import toast from 'react-hot-toast';
 
 const RecordScreenWithCamera = () => {
   const router = useRouter();
@@ -30,7 +31,16 @@ const RecordScreenWithCamera = () => {
     resetRecording,
     recordingDuration,
     cameraStream,
+    errorMessage,
+    setErrorMessage,
   } = useScreenRecordingWithCamera();
+
+  useEffect(() => {
+    if (errorMessage !== '') {
+      toast.error(errorMessage);
+      setErrorMessage('');
+    }
+  }, [errorMessage, setErrorMessage]);
 
   useEffect(() => {
     if (
@@ -132,6 +142,7 @@ const RecordScreenWithCamera = () => {
   const closeModal = () => {
     resetRecording();
     setIsOpen(false);
+    setErrorMessage('');
   };
 
   const handleStartRecording = async () => {

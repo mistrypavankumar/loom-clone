@@ -11,7 +11,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { BUNNY } from '@/constants';
 import { db } from '@/drizzle/db';
-import { user, videos } from '@/drizzle/schema';
+import { user, videos, videoViews } from '@/drizzle/schema';
 import { revalidatePath } from 'next/cache';
 import aj from '@/lib/arcjet';
 import { fixedWindow } from 'arcjet';
@@ -240,3 +240,33 @@ export const getAllVideosByUser = withErrorHandling(
     return { user: userInfo, videos: userVideos, count: userVideos.length };
   }
 );
+
+export const increaseVideoViews = withErrorHandling(async (videoId: string) => {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user?.id) return;
+
+  const userId = session.user.id;
+
+  const [existingView] = await db
+    .select()
+    .from(videoViews)
+    .where(and(eq(videoViews.userId, userId), eq(videoViews.videoId, videoId)))
+    .limit(1);
+
+  if (!existingView) {
+    await db.insert(videoViews).values({
+      userId,
+      videoId,
+    });
+  }
+
+  await db
+    .update(videos)
+    .set({
+      views: sql`${videos.views}
+      + 1`,
+      updatedAt: new Date(),
+    })
+    .where(eq(videos.id, videoId));
+});

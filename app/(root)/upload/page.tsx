@@ -11,6 +11,7 @@ import {
   saveVideoDetails,
 } from '@/lib/actions/video';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const uploadFileToBunny = (
   file: File,
@@ -163,6 +164,8 @@ const Page = () => {
         ...formData,
         duration: videoDuration,
       });
+
+      toast.success('Video uploaded successfully!');
 
       // step-6: Redirect to home page
       router.push(`/`);

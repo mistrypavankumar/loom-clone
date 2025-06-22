@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { redirect, useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
+import toast from 'react-hot-toast';
 
 const Navbar = () => {
   const router = useRouter();
@@ -42,6 +43,7 @@ const Navbar = () => {
                 return await authClient.signOut({
                   fetchOptions: {
                     onSuccess: () => {
+                      toast.success('Logged out successfully!');
                       redirect('/sign-in');
                     },
                   },

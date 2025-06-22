@@ -17,6 +17,8 @@ export const useScreenRecordingWithCamera = () => {
     recordingDuration: 0,
   });
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<ExtendedMediaStream | null>(null);
@@ -78,7 +80,6 @@ export const useScreenRecordingWithCamera = () => {
             'User cancelled screen sharing or permission denied:',
             error
           );
-
           return false;
         }
       }
@@ -137,6 +138,26 @@ export const useScreenRecordingWithCamera = () => {
       return true;
     } catch (error) {
       console.error('Recording error:', error);
+
+      const err = error instanceof Error ? error : new Error(String(error));
+
+      const messageMap: Record<string, string> = {
+        NotReadableError:
+          'Camera or mic is busy. Close other apps and try again.',
+        NotAllowedError: 'Access denied. Please allow camera or mic.',
+        AbortError: 'Recording was stopped unexpectedly.',
+        NotFoundError: 'No camera or mic found.',
+        OverconstrainedError: 'No device matches your settings.',
+        SecurityError: 'Security error accessing media devices.',
+      };
+
+      const message =
+        messageMap[err.name] ||
+        err.message ||
+        'Something went wrong while recording.';
+
+      setErrorMessage(message);
+
       return false;
     }
   };
@@ -171,5 +192,7 @@ export const useScreenRecordingWithCamera = () => {
     stopRecording,
     resetRecording,
     cameraStream,
+    errorMessage,
+    setErrorMessage,
   };
 };
