@@ -357,3 +357,50 @@ export const deleteVideoByOwner = withErrorHandling(async (videoId: string) => {
 
   return { success: true, message: 'Video deleted successfully' };
 });
+
+export const changeVideoVisibility = withErrorHandling(
+  async (videoId: string) => {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session?.user?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const userId = session.user.id;
+
+    // Step 1: Find the video owned by the user
+    const [videoRecord] = await db
+      .select()
+      .from(videos)
+      .where(and(eq(videos.id, videoId), eq(videos.userId, userId)))
+      .limit(1);
+
+    if (!videoRecord) {
+      throw new Error(
+        'Video not found or you do not have permission to modify it'
+      );
+    }
+
+    // Step 2: Toggle visibility
+    const newVisibility: 'public' | 'private' =
+      videoRecord.visibility === 'public' ? 'private' : 'public';
+
+    // Step 3: Update video visibility
+    await db
+      .update(videos)
+      .set({
+        visibility: newVisibility,
+        updatedAt: new Date(),
+      })
+      .where(eq(videos.id, videoId));
+
+    // Step 4: Revalidate affected pages
+    revalidatePaths([`/profile/${userId}`, `/video/${videoId}`]);
+
+    return {
+      success: true,
+      message: `Video visibility changed to ${newVisibility}`,
+      newVisibility,
+    };
+  }
+);

@@ -89,7 +89,7 @@ declare interface VideoDetailHeaderProps {
   createdAt: Date;
   userImg: string | null | undefined;
   username?: string;
-  bunnyVideoId: string;
+  bunnyVideoId?: string;
   ownerId: string;
   visibility: string;
   thumbnailUrl: string;
