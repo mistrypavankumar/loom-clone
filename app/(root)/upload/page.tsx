@@ -125,7 +125,7 @@ const Page = () => {
 
       // step-1: Get video upload URL and access key
       const {
-        videoId,
+        bunnyVideoId,
         uploadUrl: videoUploadUrl,
         accessKey: videoAccessKey,
       } = await getVideoUploadUrl();
@@ -143,7 +143,7 @@ const Page = () => {
         uploadUrl: thumbnailUploadUrl,
         accessKey: thumbnailAccessKey,
         cdnUrl: thumbnailCdnUrl,
-      } = await getThumbnailUploadUrl(videoId);
+      } = await getThumbnailUploadUrl(bunnyVideoId);
 
       if (!thumbnailUploadUrl || !thumbnailAccessKey || !thumbnailCdnUrl) {
         setError('Failed to get thumbnail upload credentials');
@@ -159,7 +159,7 @@ const Page = () => {
 
       // step-5: Save video details to the database
       await saveVideoDetails({
-        videoId,
+        bunnyVideoId,
         thumbnailUrl: thumbnailCdnUrl,
         ...formData,
         duration: videoDuration,

@@ -75,20 +75,44 @@ const buildVideoWithUserQuery = () => {
     .leftJoin(user, eq(videos.userId, user.id));
 };
 
-const deleteVideoFromBunny = async (videoId: string) => {
-  const url = `${VIDEO_STREAM_BASE_URL}/${BUNNY_LIBRARY_ID}/videos/${videoId}`;
+const deleteVideoFromBunny = async (
+  bunnyVideoId: string,
+  thumbnailUrl: string
+) => {
+  // 1. Delete from Bunny Stream (Video)
+  const streamUrl = `${VIDEO_STREAM_BASE_URL}/${BUNNY_LIBRARY_ID}/videos/${bunnyVideoId}`;
 
-  const response = await apiFetch(url, {
+  const videoRes = await fetch(streamUrl, {
     method: 'DELETE',
-    bunnyType: 'stream',
     headers: {
-      Accept: 'application/json',
       AccessKey: ACCESS_KEY.streamAccessKey,
     },
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to delete video from Bunny CDN');
+  console.log('Video DELETE response:', videoRes.status);
+
+  if (!videoRes.ok) {
+    const err = await videoRes.text();
+    throw new Error(`Failed to delete video from Bunny Stream: ${err}`);
+  }
+
+  // 2. Extract thumbnail path from full CDN URL
+  const fileName = thumbnailUrl.split('/').pop(); // just the filename
+  const storageUrl = `${BUNNY.STORAGE_BASE_URL}/thumbnails/${fileName}`;
+
+  // 3. Delete from Bunny Storage
+  const thumbRes = await fetch(storageUrl, {
+    method: 'DELETE',
+    headers: {
+      AccessKey: ACCESS_KEY.storageAccessKey,
+    },
+  });
+
+  console.log('Thumbnail DELETE response:', thumbRes.status);
+
+  if (!thumbRes.ok) {
+    const err = await thumbRes.text();
+    throw new Error(`Failed to delete thumbnail from Bunny Storage: ${err}`);
   }
 };
 
@@ -110,7 +134,7 @@ export const getVideoUploadUrl = withErrorHandling(async () => {
 
   const uploadUrl = `${VIDEO_STREAM_BASE_URL}/${BUNNY_LIBRARY_ID}/videos/${videoResponse.guid}`;
   return {
-    videoId: videoResponse.guid,
+    bunnyVideoId: videoResponse.guid,
     uploadUrl,
     accessKey: ACCESS_KEY.streamAccessKey,
   };
@@ -134,8 +158,9 @@ export const saveVideoDetails = withErrorHandling(
   async (videoDetails: VideoDetails) => {
     const userId = await getSessionUserId();
     await validateWithArcjet(userId);
+
     await apiFetch(
-      `${VIDEO_STREAM_BASE_URL}/${BUNNY_LIBRARY_ID}/videos/${videoDetails.videoId}`,
+      `${VIDEO_STREAM_BASE_URL}/${BUNNY_LIBRARY_ID}/videos/${videoDetails.bunnyVideoId}`,
       {
         method: 'POST',
         bunnyType: 'stream',
@@ -146,17 +171,23 @@ export const saveVideoDetails = withErrorHandling(
       }
     );
 
+    // Compose video URL
+    const videoUrl = `${BUNNY.EMBED_URL}/${BUNNY_LIBRARY_ID}/${videoDetails.bunnyVideoId}`;
     const now = new Date();
+
     await db.insert(videos).values({
       ...videoDetails,
-      videoUrl: `${BUNNY.EMBED_URL}/${BUNNY_LIBRARY_ID}/${videoDetails.videoId}`,
+      videoUrl,
       userId,
       createdAt: now,
       updatedAt: now,
     });
 
     revalidatePaths(['/']);
-    return { videoId: videoDetails.videoId };
+    return {
+      bunnyVideoId: videoDetails.bunnyVideoId,
+      message: 'Video saved successfully',
+    };
   }
 );
 
@@ -268,15 +299,16 @@ export const increaseVideoViews = withErrorHandling(async (videoId: string) => {
   const [existingView] = await db
     .select()
     .from(videoViews)
-    .where(and(eq(videoViews.userId, userId), eq(videoViews.videoId, videoId)))
+    .where(and(eq(videoViews.videoId, videoId), eq(videoViews.userId, userId)))
     .limit(1);
 
-  if (!existingView) {
-    await db.insert(videoViews).values({
-      userId,
-      videoId,
-    });
-  }
+  if (existingView) return;
+
+  await db.insert(videoViews).values({
+    userId,
+    videoId,
+    viewedAt: new Date(),
+  });
 
   await db
     .update(videos)
@@ -297,25 +329,78 @@ export const deleteVideoByOwner = withErrorHandling(async (videoId: string) => {
 
   const userId = session.user.id;
 
-  // Find the video by Bunny's videoId (string), not internal UUID
+  // Step 1: Find video by Bunny's videoId
   const [videoRecord] = await db
     .select()
     .from(videos)
-    .where(eq(videos.videoId, videoId))
-    .limit(1);
+    .where(and(eq(videos.id, videoId), eq(videos.userId, userId)));
 
-  if (!videoRecord) throw new Error('Video not found');
-  if (videoRecord.userId !== userId)
-    throw new Error('Not allowed to delete this video');
+  if (!videoRecord) {
+    throw new Error('Video not found');
+  }
 
-  // 1. Delete from Bunny CDN
-  await deleteVideoFromBunny(videoId);
+  if (videoRecord.userId !== userId) {
+    throw new Error('You do not have permission to delete this video');
+  }
 
-  // 2. Delete view records linked by internal UUID
+  // Step 2: Delete from Bunny CDN
+  await deleteVideoFromBunny(
+    videoRecord.bunnyVideoId,
+    videoRecord.thumbnailUrl
+  );
+
+  // // Step 3: Delete all view records associated with this video (by internal UUID)
   await db.delete(videoViews).where(eq(videoViews.videoId, videoRecord.id));
 
-  // 3. Delete video from database
+  // Step 4: Delete the video record itself
   await db.delete(videos).where(eq(videos.id, videoRecord.id));
 
   return { success: true, message: 'Video deleted successfully' };
 });
+
+export const changeVideoVisibility = withErrorHandling(
+  async (videoId: string) => {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session?.user?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const userId = session.user.id;
+
+    // Step 1: Find the video owned by the user
+    const [videoRecord] = await db
+      .select()
+      .from(videos)
+      .where(and(eq(videos.id, videoId), eq(videos.userId, userId)))
+      .limit(1);
+
+    if (!videoRecord) {
+      throw new Error(
+        'Video not found or you do not have permission to modify it'
+      );
+    }
+
+    // Step 2: Toggle visibility
+    const newVisibility: 'public' | 'private' =
+      videoRecord.visibility === 'public' ? 'private' : 'public';
+
+    // Step 3: Update video visibility
+    await db
+      .update(videos)
+      .set({
+        visibility: newVisibility,
+        updatedAt: new Date(),
+      })
+      .where(eq(videos.id, videoId));
+
+    // Step 4: Revalidate affected pages
+    revalidatePaths([`/profile/${userId}`, `/video/${videoId}`]);
+
+    return {
+      success: true,
+      message: `Video visibility changed to ${newVisibility}`,
+      newVisibility,
+    };
+  }
+);

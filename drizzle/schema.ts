@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   pgTable,
   text,
@@ -68,11 +69,11 @@ export const verification = pgTable('verification', {
 });
 
 export const videos = pgTable('videos', {
-  id: uuid('id').primaryKey().defaultRandom().unique(),
+  id: uuid('id').primaryKey().defaultRandom().unique(), // Unique ID for the video
   title: text('title').notNull(),
   description: text('description').notNull(),
   videoUrl: text('video_url').notNull(),
-  videoId: text('video_id').notNull(),
+  bunnyVideoId: text('bunny_video_id').notNull(), // This is Bunny video ID
   thumbnailUrl: text('thumbnail_url').notNull(),
   visibility: text('visibility')
     .$type<'public' | 'private' | string>()
@@ -86,16 +87,22 @@ export const videos = pgTable('videos', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const videoViews = pgTable('video_views', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  videoId: uuid('video_id')
-    .notNull()
-    .references(() => videos.id, { onDelete: 'cascade' }),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  viewedAt: timestamp('viewed_at').defaultNow(),
-});
+export const videoViews = pgTable(
+  'video_views',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    viewedAt: timestamp('viewed_at').defaultNow(),
+  },
+  (table) => ({
+    videoUserIndex: index('video_user_idx').on(table.videoId, table.userId), // composite index for videoId and userId
+  })
+);
 
 export const schema = {
   user,
