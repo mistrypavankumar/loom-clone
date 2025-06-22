@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { daysAgo } from '@/lib/utils';
+import VideoDeleteButton from '@/components/VideoDeleteButton';
 
 const VideoDetailHeader = ({
   id,
@@ -63,6 +64,7 @@ const VideoDetailHeader = ({
             height={24}
           />
         </button>
+        <VideoDeleteButton videoId={id} userId={ownerId} />
       </aside>
     </header>
   );
