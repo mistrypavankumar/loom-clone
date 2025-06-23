@@ -3,8 +3,14 @@
 A full-stack video sharing platform built with **Next.js**, **Better Auth**, **Xata**, **Drizzle ORM**, **Bunny CDN**,
 and **Arcjet**.
 
----
 
+## 📺 Project Demo
+
+Watch the full demo on YouTube:
+
+[![Snapcast Demo](https://img.youtube.com/vi/huRulOh_g8U/0.jpg)](https://youtu.be/huRulOh_g8U)
+
+---
 ## 🚀 Features
 
 - 🔐 Secure authentication with [Better Auth](https://www.better-auth.com/)
