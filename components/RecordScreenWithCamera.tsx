@@ -66,6 +66,21 @@ const RecordScreenWithCamera = () => {
     closeModal();
   };
 
+  useEffect(() => {
+    const video = cameraPreviewRef.current;
+    if (!video) return;
+
+    const handleLeavePiP = () => {
+      console.log('📺 PiP closed, restoring floating preview');
+    };
+
+    video.addEventListener('leavepictureinpicture', handleLeavePiP);
+
+    return () => {
+      video.removeEventListener('leavepictureinpicture', handleLeavePiP);
+    };
+  }, []);
+
   const cameraPopupOpenedRef = useRef(false);
 
   const handleStartRecording = async () => {
@@ -132,6 +147,24 @@ const RecordScreenWithCamera = () => {
     if (recordedVideoUrl && videoRef.current) {
       videoRef.current.src = recordedVideoUrl;
     }
+  };
+
+  const handleStopRecording = () => {
+    if (
+      document.pictureInPictureEnabled &&
+      document.pictureInPictureElement === cameraPreviewRef.current
+    ) {
+      document
+        .exitPictureInPicture()
+        .then(() => {
+          console.log('✅ Exited Picture-in-Picture');
+        })
+        .catch((err) => {
+          console.warn('Error exiting PiP:', err);
+        });
+    }
+
+    stopRecording();
   };
 
   return (
@@ -233,7 +266,7 @@ const RecordScreenWithCamera = () => {
 
               {isRecording && (
                 <button
-                  onClick={stopRecording}
+                  onClick={handleStopRecording}
                   className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 flex items-center gap-2"
                 >
                   <Image
