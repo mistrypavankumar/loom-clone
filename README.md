@@ -212,7 +212,6 @@ loom-clone/
 ├── fonts/                  # Custom font files
 ├── lib/                    # Utility functions and third-party wrappers (e.g., Arcjet, auth)
 ├── node_modules/           # Installed dependencies
-├── pages/                  # Legacy pages (if using both /pages and /app)
 ├── public/                 # Static files like images, icons
 ├── .env                    # Environment variables
 ├── .gitignore              # Git ignored files
