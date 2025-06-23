@@ -66,41 +66,16 @@ const RecordScreenWithCamera = () => {
     closeModal();
   };
 
-  useEffect(() => {
-    const video = cameraPreviewRef.current;
-    if (!video) return;
-
-    const handleLeavePiP = () => {
-      console.log('📺 PiP closed, restoring floating preview');
-    };
-
-    video.addEventListener('leavepictureinpicture', handleLeavePiP);
-
-    return () => {
-      video.removeEventListener('leavepictureinpicture', handleLeavePiP);
-    };
-  }, []);
-
   const cameraPopupOpenedRef = useRef(false);
 
   const handleStartRecording = async () => {
-    if (mode === 'both' && cameraPreviewRef.current) {
-      // Ensure video is playing before PiP
-      cameraPreviewRef.current
-        .play()
-        .then(() => {
-          return cameraPreviewRef.current!.requestPictureInPicture();
-        })
-        .then(() => {
-          console.log('✅ Entered Picture-in-Picture');
-        })
-        .catch((err) => {
-          toast.error('Failed to enter Picture-in-Picture');
-          console.error(err);
-        });
-    }
-
     await startRecording(mode);
+
+    if (mode === 'both' && cameraPreviewRef.current) {
+      cameraPreviewRef.current.play().then(() => {
+        enterPictureInPicture(cameraPreviewRef.current!);
+      });
+    }
   };
 
   const closeModal = () => {
@@ -129,19 +104,9 @@ const RecordScreenWithCamera = () => {
     await startRecording(mode);
 
     if (mode === 'both' && cameraPreviewRef.current) {
-      cameraPreviewRef.current
-        .play()
-        .then(() => {
-          cameraPreviewRef.current!.requestPictureInPicture();
-        })
-        .then(() => {
-          console.log('✅ Re-entered Picture-in-Picture');
-          cameraPopupOpenedRef.current = true;
-        })
-        .catch((err) => {
-          toast.error('Failed to re-enter Picture-in-Picture');
-          console.error(err);
-        });
+      cameraPreviewRef.current.play().then(() => {
+        enterPictureInPicture(cameraPreviewRef.current!);
+      });
     }
 
     if (recordedVideoUrl && videoRef.current) {
@@ -167,6 +132,39 @@ const RecordScreenWithCamera = () => {
     stopRecording();
   };
 
+  const enterPictureInPicture = async (videoEl: HTMLVideoElement) => {
+    if (!document.pictureInPictureEnabled || videoEl.disablePictureInPicture) {
+      toast.error('Picture-in-Picture not supported.');
+      return;
+    }
+
+    // Exit existing PiP if active
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture().catch(console.warn);
+    }
+
+    // Ensure metadata is loaded
+    const requestPiP = () => {
+      videoEl
+        .requestPictureInPicture()
+        .then(() => {
+          console.log('✅ Entered Picture-in-Picture');
+        })
+        .catch((err) => {
+          toast.error('Failed to enter Picture-in-Picture');
+          console.error(err);
+        });
+    };
+
+    if (videoEl.readyState >= 1) {
+      requestPiP(); // metadata is already loaded
+    } else {
+      videoEl.onloadedmetadata = () => {
+        requestPiP();
+      };
+    }
+  };
+
   return (
     <div className="record">
       <button className="primary-btn" onClick={() => setIsOpen(true)}>
@@ -184,7 +182,9 @@ const RecordScreenWithCamera = () => {
               }
             }}
           />
-          <div className="dialog-content">
+          <div
+            className={`dialog-content ${isRecording && mode === 'camera' ? 'max-w-[700px]' : ''}`}
+          >
             <div className={'flex justify-between items-start mb-4'}>
               <div>
                 <h3 className="text-lg font-semibold">Video Recording</h3>
@@ -229,6 +229,7 @@ const RecordScreenWithCamera = () => {
                     muted
                     playsInline
                     className={'w-full'}
+                    style={{ transform: 'scaleX(-1)' }}
                   />
                 ) : (
                   <article className="text-red-600 font-semibold">
@@ -302,14 +303,28 @@ const RecordScreenWithCamera = () => {
       )}
 
       {/* ✅ Floating Camera Preview with Resize */}
-      {isOpen && mode === 'both' && (
-        <video
-          ref={cameraPreviewRef}
-          autoPlay
-          muted
-          playsInline
-          className="w-full h-full object-cover hidden"
-        />
+      {isOpen && mode === 'both' && cameraPreviewRef && cameraStream && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 1000,
+            width: '250px',
+            height: '200px',
+            cursor: 'move',
+          }}
+          className="rounded-md shadow-lg overflow-hidden border border-gray-300 bg-black relative"
+        >
+          <video
+            ref={cameraPreviewRef}
+            autoPlay
+            muted
+            playsInline
+            className={'w-full h-full object-cover'}
+            style={{ transform: 'scaleX(-1)' }}
+          />
+        </div>
       )}
     </div>
   );
