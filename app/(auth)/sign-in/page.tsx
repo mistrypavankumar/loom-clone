@@ -54,7 +54,7 @@ const Page = () => {
                 className={'rounded-full'}
               />
               <div>
-                <h3>Mansi Sharma</h3>
+                <h3>Sai Kamal</h3>
                 <p>Content creator</p>
               </div>
             </article>
